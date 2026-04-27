@@ -11,16 +11,21 @@
 #define RIGHT_WHEEL_OUTPUT_PIN_A 4
 #define RIGHT_WHEEL_OUTPUT_PIN_B 5
 
+#define RELAY_INPUT 6
+#define LED_OUPUT 7
+
 #define DELAY_TIME 1000
 
 void turnLeft(); // Deactivate turnMode upon completion
 void turnRight();
 void forward();
+void stop();
 
 unsigned char turnMode = 0;
-int read;
+int left_rear_value;
 int msec = 0;
-int write;
+int led;
+int relay_value;
 // clock_t before = NULL, end = NULL;
 
 void setup() {
@@ -32,59 +37,85 @@ void setup() {
 
     pinMode(LEFT_WHEEL_OUPUT_PIN_A, OUTPUT);
     pinMode(RIGHT_WHEEL_OUTPUT_PIN_B, OUTPUT);
+
+    pinMode(RELAY_INPUT, INPUT_PULLUP);
+    pinMode(LED_OUPUT, OUTPUT);
 }
 
 void loop() {
-    read = digitalRead(LEFT_REAR_DIGITAL_INPUT_PIN);
-    if(read == HIGH && turnMode == 0){
-      turnMode = 1;
-      delay(DELAY_TIME);
-    }
-    else if(read == HIGH && turnMode == 1){
-      turnMode = 0;
-      delay(DELAY_TIME);
+
+    relay_value = digitalRead(RELAY_INPUT);
+    if(relay_value == HIGH){
+        
+        digitalWrite(LED_OUPUT, HIGH);
+        left_rear_value = digitalRead(LEFT_REAR_DIGITAL_INPUT_PIN);
+        if(left_rear_value == HIGH && turnMode == 0){
+            turnMode = 1;
+            delay(DELAY_TIME);
+        }
+
+        else if(left_rear_value == HIGH && turnMode == 1){
+            turnMode = 0;
+            delay(DELAY_TIME);
+        }
+
+        if(turnMode == 1){
+            if(digitalRead(RIGHT_FRONT_DIGITAL_INPUT_PIN) == HIGH){
+                turnRight();
+            }
+            else if(digitalRead(LEFT_FRONT_DIGITAL_INPUT_PIN) == HIGH){
+                turnLeft();
+            }
+
+        }
+
+        else if(digitalRead(RIGHT_REAR_DIGITAL_INPUT_PIN) == HIGH){
+            stop();
+        }
+
+            // else{
+            // if (digitalRead(RIGHT_REAR_DIGITAL_INPUT_PIN) == HIGH){
+            //     // if(!before){
+            //     //   before = clock();
+            //     // }
+            //     // else{
+            //     //   end = clock() - before;
+            //     //   msec = end * 1000 / CLOCKS_PER_SEC;
+
+            //     //   Serial.print("Time taken: seconds %d milliseconds");
+            //     //   Serial.println(msec/1000, msec%1000);
+
+            //     //   return;
+            //     // }
+            // }
+        forward();
     }
 
-    if(turnMode == 1){
-      if(digitalRead(RIGHT_FRONT_DIGITAL_INPUT_PIN) == HIGH){
-        turnRight();
-      }
-      else if(digitalRead(LEFT_FRONT_DIGITAL_INPUT_PIN) == HIGH){
-        turnLeft();
-      }
-    }
     else{
-      if (digitalRead(RIGHT_REAR_DIGITAL_INPUT_PIN) == HIGH){
-        // if(!before){
-        //   before = clock();
-        // }
-        // else{
-        //   end = clock() - before;
-        //   msec = end * 1000 / CLOCKS_PER_SEC;
-
-        //   Serial.print("Time taken: seconds %d milliseconds");
-        //   Serial.println(msec/1000, msec%1000);
-
-        //   return;
-        // }
-      }
+        stop();
+        digitalWrite(LED_OUPUT, LOW);
     }
-
-    forward();
 }
 
+
+
 void turnLeft(){
-    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_A, 1);
+    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_B, 1);
     digitalWrite(LEFT_WHEEL_OUPUT_PIN_A, 0);
 }
 
 void turnRight(){
     digitalWrite(LEFT_WHEEL_OUPUT_PIN_A, 1);
 
-    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_A, 0);
+    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_B, 0);
 }
 
 void forward(){
-    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_A, 1);
+    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_B, 1);
     digitalWrite(LEFT_WHEEL_OUPUT_PIN_A, 1);
+}
+
+void stop(){
+    digitalWrite(RIGHT_WHEEL_OUTPUT_PIN_B, 0);
+    digitalWrite(LEFT_WHEEL_OUPUT_PIN_A, 0);
 }
